@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -122,13 +123,16 @@ public class ExcelExporter {
     }
 
     private static String coreProps() {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String timestamp = df.format(new Date());
         return XML_DECL +
                 "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\" xmlns:dcmitype=\"http://purl.org/dc/dcmitype/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
                 "<dc:title>Ranking Export</dc:title>" +
                 "<dc:creator>StudentSystem</dc:creator>" +
                 "<cp:lastModifiedBy>StudentSystem</cp:lastModifiedBy>" +
-                "<dcterms:created xsi:type=\"dcterms:W3CDTF\">" + new Date() + "</dcterms:created>" +
-                "<dcterms:modified xsi:type=\"dcterms:W3CDTF\">" + new Date() + "</dcterms:modified>" +
+                "<dcterms:created xsi:type=\"dcterms:W3CDTF\">" + timestamp + "</dcterms:created>" +
+                "<dcterms:modified xsi:type=\"dcterms:W3CDTF\">" + timestamp + "</dcterms:modified>" +
                 "</cp:coreProperties>";
     }
 
@@ -158,13 +162,31 @@ public class ExcelExporter {
     }
 
     private static String styles() {
-        return XML_DECL + "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"></styleSheet>";
+        return XML_DECL +
+                "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
+                "<numFmts count=\"0\"/>" +
+                "<fonts count=\"1\"><font><sz val=\"11\"/><name val=\"Calibri\"/></font></fonts>" +
+                "<fills count=\"2\">" +
+                "<fill><patternFill patternType=\"none\"/></fill>" +
+                "<fill><patternFill patternType=\"gray125\"/></fill>" +
+                "</fills>" +
+                "<borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders>" +
+                "<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>" +
+                "<cellXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/></cellXfs>" +
+                "</styleSheet>";
     }
 
     private static String sheetXml(List<String> headers, List<Student> students, LinkedHashSet<String> courseNames, Map<String,Integer> rankMap) {
         StringBuilder sb = new StringBuilder();
         sb.append(XML_DECL);
         sb.append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">");
+
+        // 添加 dimension 元素
+        int totalRows = students.size() + 1;
+        int totalCols = headers.size();
+        String endCell = columnName(totalCols - 1) + totalRows;
+        sb.append("<dimension ref=\"A1:").append(endCell).append("\"/>");
+
         sb.append("<sheetData>");
         int rowIndex = 1;
         // Header row
