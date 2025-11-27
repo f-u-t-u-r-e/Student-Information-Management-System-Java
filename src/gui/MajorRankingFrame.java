@@ -4,8 +4,12 @@ import model.Student;
 import service.StudentManager;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 /**
@@ -23,43 +27,76 @@ public class MajorRankingFrame extends JFrame {
         "排名", "学号", "姓名", "班级", "总学分", "加权平均分(GPA)", "课程数"
     };
 
+    // 配色方案
+    private static final Color PRIMARY_COLOR = new Color(41, 128, 185);
+    private static final Color ACCENT_COLOR = new Color(46, 204, 113);
+    private static final Color WARNING_COLOR = new Color(241, 196, 15);
+    private static final Color BACKGROUND_COLOR = new Color(236, 240, 241);
+    private static final Color CARD_COLOR = Color.WHITE;
+    private static final Color TEXT_COLOR = new Color(44, 62, 80);
+    private static final Color HEADER_COLOR = new Color(52, 73, 94);
+
     public MajorRankingFrame(StudentManager studentManager) {
         this.studentManager = studentManager;
 
         setTitle("专业成绩排名");
-        setSize(900, 600);
+        setSize(1000, 650);
         setLocationRelativeTo(null);
+        getContentPane().setBackground(BACKGROUND_COLOR);
 
         initComponents();
         loadMajors();
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(15, 15));
 
         // 顶部选择面板
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 10, 15));
+        JPanel topPanel = new JPanel(new BorderLayout(15, 0));
+        topPanel.setBackground(CARD_COLOR);
+        topPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(20, 25, 20, 25)
+        ));
+
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        leftPanel.setBackground(CARD_COLOR);
 
         JLabel titleLabel = new JLabel("选择专业:");
-        titleLabel.setFont(new Font("Dialog", Font.BOLD, 14));
-        topPanel.add(titleLabel);
+        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 16));
+        titleLabel.setForeground(TEXT_COLOR);
+        leftPanel.add(titleLabel);
 
         majorCombo = new JComboBox<>();
-        majorCombo.setPreferredSize(new Dimension(250, 30));
+        majorCombo.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        majorCombo.setPreferredSize(new Dimension(280, 38));
         majorCombo.addActionListener(e -> loadRanking());
-        topPanel.add(majorCombo);
+        leftPanel.add(majorCombo);
 
-        JButton refreshButton = new JButton("刷新");
+        topPanel.add(leftPanel, BorderLayout.WEST);
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightPanel.setBackground(CARD_COLOR);
+
+        JButton refreshButton = createStyledButton("刷新数据", PRIMARY_COLOR);
         refreshButton.addActionListener(e -> {
             loadMajors();
             loadRanking();
         });
-        topPanel.add(refreshButton);
+        rightPanel.add(refreshButton);
+
+        topPanel.add(rightPanel, BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
 
         // 中间表格面板
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(CARD_COLOR);
+        tablePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(0, 0, 0, 0)
+        ));
+
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -69,8 +106,21 @@ public class MajorRankingFrame extends JFrame {
 
         rankingTable = new JTable(tableModel);
         rankingTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        rankingTable.setRowHeight(28);
-        rankingTable.getTableHeader().setFont(new Font("Dialog", Font.BOLD, 12));
+        rankingTable.setRowHeight(32);
+        rankingTable.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        rankingTable.setSelectionBackground(new Color(52, 152, 219, 100));
+        rankingTable.setSelectionForeground(TEXT_COLOR);
+        rankingTable.setGridColor(new Color(189, 195, 199));
+        rankingTable.setShowGrid(true);
+        rankingTable.setIntercellSpacing(new Dimension(1, 1));
+
+        // 设置表头样式
+        JTableHeader header = rankingTable.getTableHeader();
+        header.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        header.setBackground(HEADER_COLOR);
+        header.setForeground(Color.BLACK);
+        header.setPreferredSize(new Dimension(header.getWidth(), 42));
+        header.setBorder(BorderFactory.createLineBorder(HEADER_COLOR));
 
         // 设置列宽
         rankingTable.getColumnModel().getColumn(0).setPreferredWidth(60);  // 排名
@@ -81,22 +131,74 @@ public class MajorRankingFrame extends JFrame {
         rankingTable.getColumnModel().getColumn(5).setPreferredWidth(150); // GPA
         rankingTable.getColumnModel().getColumn(6).setPreferredWidth(80);  // 课程数
 
+        // 居中对齐
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < rankingTable.getColumnCount(); i++) {
+            rankingTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
         JScrollPane scrollPane = new JScrollPane(rankingTable);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(CARD_COLOR);
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+
+        add(tablePanel, BorderLayout.CENTER);
 
         // 底部统计面板
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
+        JPanel bottomPanel = new JPanel(new BorderLayout(15, 0));
+        bottomPanel.setBackground(HEADER_COLOR);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
 
         statsLabel = new JLabel("请选择专业");
-        statsLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
+        statsLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        statsLabel.setForeground(Color.WHITE);
         bottomPanel.add(statsLabel, BorderLayout.WEST);
 
-        JButton exportButton = new JButton("导出排名");
-        exportButton.addActionListener(e -> exportRanking());
-        bottomPanel.add(exportButton, BorderLayout.EAST);
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0));
+        actionPanel.setBackground(HEADER_COLOR);
+        JButton previewButton = createStyledButton("预览排名", WARNING_COLOR);
+        previewButton.addActionListener(e -> previewRanking());
+        JButton exportButton = createStyledButton("导出Excel", ACCENT_COLOR);
+        exportButton.addActionListener(e -> exportRankingToExcel());
+        actionPanel.add(previewButton);
+        actionPanel.add(exportButton);
+        bottomPanel.add(actionPanel, BorderLayout.EAST);
 
         add(bottomPanel, BorderLayout.SOUTH);
+
+        // 添加边距
+        ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    }
+
+    /**
+     * 创建样式化按钮
+     */
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setPreferredSize(new Dimension(button.getPreferredSize().width + 30, 38));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+
+        // 鼠标悬停效果
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(bgColor.brighter());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(bgColor);
+            }
+        });
+
+        return button;
     }
 
     /**
@@ -178,7 +280,7 @@ public class MajorRankingFrame extends JFrame {
     /**
      * 导出排名数据
      */
-    private void exportRanking() {
+    private void previewRanking() {
         String selectedMajor = (String) majorCombo.getSelectedItem();
         if (selectedMajor == null || tableModel.getRowCount() == 0) {
             JOptionPane.showMessageDialog(this,
@@ -218,7 +320,43 @@ public class MajorRankingFrame extends JFrame {
 
         JOptionPane.showMessageDialog(this,
                 scrollPane,
-                "排名数据",
+                "排名数据预览",
                 JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * 导出Excel (CSV UTF-8 BOM)
+     */
+    private void exportRankingToExcel() {
+        String selectedMajor = (String) majorCombo.getSelectedItem();
+        if (selectedMajor == null || tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "没有可导出的数据!", "提示",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("选择导出 XLSX 文件位置");
+        chooser.setSelectedFile(new java.io.File(selectedMajor + "_排名导出.xlsx"));
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        java.io.File file = chooser.getSelectedFile();
+        // 如果用户没写后缀，补 .xlsx
+        if (!file.getName().toLowerCase().endsWith(".xlsx")) {
+            file = new java.io.File(file.getParentFile(), file.getName() + ".xlsx");
+        }
+        boolean ok = service.ExcelExporter.exportMajorRankingXlsx(studentManager, selectedMajor, file);
+        if (ok) {
+            JOptionPane.showMessageDialog(this,
+                    "Excel 导出成功:\n" + file.getAbsolutePath(), "成功",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Excel 导出失败", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

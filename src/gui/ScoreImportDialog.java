@@ -5,6 +5,8 @@ import service.StudentManager;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 
 /**
@@ -19,32 +21,63 @@ public class ScoreImportDialog extends JDialog {
     private JButton selectFileButton;
     private JButton importButton;
 
+    // 配色方案
+    private static final Color PRIMARY_COLOR = new Color(41, 128, 185);
+    private static final Color ACCENT_COLOR = new Color(46, 204, 113);
+    private static final Color WARNING_COLOR = new Color(230, 126, 34);
+    private static final Color SECONDARY_COLOR = new Color(149, 165, 166);
+    private static final Color BACKGROUND_COLOR = new Color(236, 240, 241);
+    private static final Color CARD_COLOR = Color.WHITE;
+    private static final Color TEXT_COLOR = new Color(44, 62, 80);
+
     public ScoreImportDialog(Frame parent, StudentManager studentManager) {
-        // 使用非阻塞模式，避免父窗口阻塞导致感觉“不可点击”
+        // 使用非阻塞模式，避免父窗口阻塞导致感觉"不可点击"
         super(parent, "成绩导入", false);
         this.studentManager = studentManager;
 
+        getContentPane().setBackground(BACKGROUND_COLOR);
         initComponents();
         pack();
-        setMinimumSize(new Dimension(600, 450));
+        setMinimumSize(new Dimension(700, 550));
         setLocationRelativeTo(parent);
         setResizable(true);
         SwingUtilities.invokeLater(this::requestFocusInWindow);
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(0, 0));
 
-        // 顶部说明面板
-        JPanel instructionPanel = new JPanel(new BorderLayout());
-        instructionPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 10, 15));
+        // 标题栏
+        JPanel titlePanel = new JPanel(new BorderLayout());
+        titlePanel.setBackground(PRIMARY_COLOR);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(18, 25, 18, 25));
 
         JLabel titleLabel = new JLabel("成绩数据导入");
-        titleLabel.setFont(new Font("Dialog", Font.BOLD, 16));
-        instructionPanel.add(titleLabel, BorderLayout.NORTH);
+        titleLabel.setFont(new Font("微软雅黑", Font.BOLD, 18));
+        titleLabel.setForeground(Color.WHITE);
+        titlePanel.add(titleLabel, BorderLayout.WEST);
+
+        add(titlePanel, BorderLayout.NORTH);
+
+        // 主内容面板
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        mainPanel.setBackground(BACKGROUND_COLOR);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // 说明面板
+        JPanel instructionPanel = new JPanel(new BorderLayout(0, 10));
+        instructionPanel.setBackground(CARD_COLOR);
+        instructionPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(20, 25, 20, 25)
+        ));
+
+        JLabel instructionTitleLabel = new JLabel("文件格式说明");
+        instructionTitleLabel.setFont(new Font("微软雅黑", Font.BOLD, 15));
+        instructionTitleLabel.setForeground(TEXT_COLOR);
+        instructionPanel.add(instructionTitleLabel, BorderLayout.NORTH);
 
         JTextArea instructionText = new JTextArea(
-            "文件格式说明:\n" +
             "CSV文件,每行一条成绩记录\n" +
             "格式: 学号,课程名,学分,成绩\n\n" +
             "示例:\n" +
@@ -53,65 +86,126 @@ public class ScoreImportDialog extends JDialog {
             "2021002,数据结构,4.0,88.0"
         );
         instructionText.setEditable(false);
-        instructionText.setBackground(new Color(245, 245, 245));
-        instructionText.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
+        instructionText.setFont(new Font("Microsoft YaHei UI", Font.PLAIN, 13));
+        instructionText.setForeground(new Color(127, 140, 141));
+        instructionText.setBackground(new Color(250, 250, 250));
+        instructionText.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         instructionPanel.add(instructionText, BorderLayout.CENTER);
 
-        add(instructionPanel, BorderLayout.NORTH);
+        mainPanel.add(instructionPanel, BorderLayout.NORTH);
 
-        // 中间文件选择面板
-        JPanel filePanel = new JPanel(new BorderLayout(5, 5));
-        filePanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 10, 15));
+        // 文件选择面板
+        JPanel filePanel = new JPanel(new BorderLayout(15, 0));
+        filePanel.setBackground(CARD_COLOR);
+        filePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(20, 25, 20, 25)
+        ));
 
         JLabel fileLabel = new JLabel("成绩文件:");
+        fileLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        fileLabel.setForeground(TEXT_COLOR);
         filePanel.add(fileLabel, BorderLayout.WEST);
 
         filePathField = new JTextField();
-        filePathField.setEditable(true); // 允许手动粘贴路径作为临时绕过文件选择问题
+        filePathField.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        filePathField.setPreferredSize(new Dimension(300, 36));
+        filePathField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
         filePanel.add(filePathField, BorderLayout.CENTER);
 
-        selectFileButton = new JButton("选择文件");
+        selectFileButton = createStyledButton("选择文件", PRIMARY_COLOR);
         selectFileButton.addActionListener(e -> selectFile());
         filePanel.add(selectFileButton, BorderLayout.EAST);
 
-        add(filePanel, BorderLayout.CENTER);
+        mainPanel.add(filePanel, BorderLayout.CENTER);
 
         // 日志面板
-        JPanel logPanel = new JPanel(new BorderLayout());
-        logPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 10, 15));
+        JPanel logPanel = new JPanel(new BorderLayout(0, 10));
+        logPanel.setBackground(CARD_COLOR);
+        logPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(20, 25, 20, 25)
+        ));
 
-        JPanel northLogPanel = new JPanel(new BorderLayout());
+        JPanel logHeaderPanel = new JPanel(new BorderLayout());
+        logHeaderPanel.setBackground(CARD_COLOR);
+
         JLabel logLabel = new JLabel("导入日志:");
-        northLogPanel.add(logLabel, BorderLayout.WEST);
+        logLabel.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        logLabel.setForeground(TEXT_COLOR);
+        logHeaderPanel.add(logLabel, BorderLayout.WEST);
+
         workDirLabel = new JLabel("工作目录: " + System.getProperty("user.dir"));
-        workDirLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
-        northLogPanel.add(workDirLabel, BorderLayout.EAST);
-        logPanel.add(northLogPanel, BorderLayout.NORTH);
+        workDirLabel.setFont(new Font("微软雅黑", Font.PLAIN, 11));
+        workDirLabel.setForeground(new Color(127, 140, 141));
+        logHeaderPanel.add(workDirLabel, BorderLayout.EAST);
+
+        logPanel.add(logHeaderPanel, BorderLayout.NORTH);
 
         logArea = new JTextArea();
         logArea.setEditable(false);
-        logArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        logArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+        logArea.setForeground(TEXT_COLOR);
+        logArea.setBackground(new Color(250, 250, 250));
         JScrollPane scrollPane = new JScrollPane(logArea);
-        scrollPane.setPreferredSize(new Dimension(500, 180));
+        scrollPane.setPreferredSize(new Dimension(600, 150));
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199), 1));
         logPanel.add(scrollPane, BorderLayout.CENTER);
 
-        add(logPanel, BorderLayout.SOUTH);
+        mainPanel.add(logPanel, BorderLayout.SOUTH);
+
+        add(mainPanel, BorderLayout.CENTER);
 
         // 底部按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 18));
+        buttonPanel.setBackground(CARD_COLOR);
+        buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(189, 195, 199)));
 
-        importButton = new JButton("开始导入");
+        importButton = createStyledButton("开始导入", ACCENT_COLOR);
         importButton.setEnabled(false);
         importButton.addActionListener(e -> importScores());
         buttonPanel.add(importButton);
 
-        JButton closeButton = new JButton("关闭");
+        JButton closeButton = createStyledButton("关闭", SECONDARY_COLOR);
         closeButton.addActionListener(e -> dispose());
         buttonPanel.add(closeButton);
 
-        // 将按钮面板添加到日志面板的底部
-        logPanel.add(buttonPanel, BorderLayout.SOUTH);
+        add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    /**
+     * 创建样式化按钮
+     */
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setPreferredSize(new Dimension(button.getPreferredSize().width + 30, 38));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+
+        // 鼠标悬停效果
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (button.isEnabled()) {
+                    button.setBackground(bgColor.brighter());
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(bgColor);
+            }
+        });
+
+        return button;
     }
 
     /**

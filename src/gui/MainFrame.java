@@ -4,7 +4,9 @@ import model.Student;
 import service.StudentManager;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
@@ -25,6 +27,16 @@ public class MainFrame extends JFrame {
     // 表格列名
     private final String[] columnNames = {"学号", "姓名", "性别", "年龄", "专业", "班级", "联系电话"};
 
+    // 现代化配色方案
+    private static final Color PRIMARY_COLOR = new Color(41, 128, 185);      // 主色调 - 蓝色
+    private static final Color SECONDARY_COLOR = new Color(52, 152, 219);    // 次色调 - 浅蓝
+    private static final Color ACCENT_COLOR = new Color(46, 204, 113);       // 强调色 - 绿色
+    private static final Color DANGER_COLOR = new Color(231, 76, 60);        // 危险色 - 红色
+    private static final Color BACKGROUND_COLOR = new Color(236, 240, 241);  // 背景色 - 浅灰
+    private static final Color CARD_COLOR = Color.WHITE;                     // 卡片背景
+    private static final Color TEXT_COLOR = new Color(44, 62, 80);           // 文字颜色
+    private static final Color HEADER_COLOR = new Color(52, 73, 94);         // 表头颜色
+
     public MainFrame() {
         // 初始化学生管理器 - 兼容从 bin 目录运行的情况(旧脚本)
         String dataPath = "data/students.txt";
@@ -37,11 +49,19 @@ public class MainFrame extends JFrame {
         }
         studentManager = new StudentManager(dataPath);
 
+        // 设置系统外观
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // 设置窗口属性
-        setTitle("学生信息管理系统");
-        setSize(1000, 600);
+        setTitle("学生信息管理系统 v2.0");
+        setSize(1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        getContentPane().setBackground(BACKGROUND_COLOR);
 
         // 初始化组件
         initComponents();
@@ -55,77 +75,111 @@ public class MainFrame extends JFrame {
      */
     private void initComponents() {
         // 创建主面板
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBackground(BACKGROUND_COLOR);
 
         // 顶部面板 - 搜索和工具栏
-        JPanel topPanel = new JPanel(new BorderLayout(5, 5));
+        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        topPanel.setBackground(BACKGROUND_COLOR);
 
         // 搜索面板
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.add(new JLabel("搜索类型:"));
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        searchPanel.setBackground(CARD_COLOR);
+        searchPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+
+        JLabel searchLabel = new JLabel("搜索类型:");
+        searchLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
+        searchLabel.setForeground(TEXT_COLOR);
+        searchPanel.add(searchLabel);
 
         searchTypeCombo = new JComboBox<>(new String[]{"全部", "学号", "姓名", "专业", "班级"});
+        searchTypeCombo.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        searchTypeCombo.setPreferredSize(new Dimension(120, 32));
         searchPanel.add(searchTypeCombo);
 
         searchField = new JTextField(20);
+        searchField.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        searchField.setPreferredSize(new Dimension(250, 32));
+        searchField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
         searchPanel.add(searchField);
 
-        JButton searchButton = new JButton("搜索");
+        JButton searchButton = createStyledButton("搜索", PRIMARY_COLOR);
         searchButton.addActionListener(e -> performSearch());
         searchPanel.add(searchButton);
 
-        JButton refreshButton = new JButton("刷新");
+        JButton refreshButton = createStyledButton("刷新", SECONDARY_COLOR);
         refreshButton.addActionListener(e -> refreshTable());
         searchPanel.add(refreshButton);
 
         topPanel.add(searchPanel, BorderLayout.NORTH);
 
         // 工具栏面板
-        JPanel toolbarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel toolbarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 10));
+        toolbarPanel.setBackground(CARD_COLOR);
+        toolbarPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
 
-        JButton addButton = new JButton("添加学生");
-        addButton.setIcon(UIManager.getIcon("FileView.fileIcon"));
+        JButton addButton = createStyledButton("+ 添加学生", ACCENT_COLOR);
         addButton.addActionListener(e -> addStudent());
         toolbarPanel.add(addButton);
 
-        JButton editButton = new JButton("编辑学生");
+        JButton editButton = createStyledButton("编辑学生", PRIMARY_COLOR);
         editButton.addActionListener(e -> editStudent());
         toolbarPanel.add(editButton);
 
-        JButton deleteButton = new JButton("删除学生");
+        JButton deleteButton = createStyledButton("删除学生", DANGER_COLOR);
         deleteButton.addActionListener(e -> deleteStudent());
         toolbarPanel.add(deleteButton);
 
-        toolbarPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        toolbarPanel.add(createSeparator());
 
-        JButton statsButton = new JButton("统计信息");
+        JButton statsButton = createStyledButton("统计信息", new Color(155, 89, 182));
         statsButton.addActionListener(e -> showStatistics());
         toolbarPanel.add(statsButton);
 
-        JButton backupButton = new JButton("备份数据");
+        JButton backupButton = createStyledButton("备份数据", new Color(52, 152, 219));
         backupButton.addActionListener(e -> backupData());
         toolbarPanel.add(backupButton);
 
-        toolbarPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        toolbarPanel.add(createSeparator());
 
-        JButton importScoreButton = new JButton("导入成绩");
+        JButton importScoreButton = createStyledButton("导入成绩", new Color(230, 126, 34));
         importScoreButton.addActionListener(e -> importScores());
         toolbarPanel.add(importScoreButton);
 
-        JButton rankingButton = new JButton("专业排名");
+        JButton rankingButton = createStyledButton("专业排名", new Color(241, 196, 15));
         rankingButton.addActionListener(e -> showMajorRanking());
         toolbarPanel.add(rankingButton);
 
-        JButton manageCourseButton = new JButton("课程管理");
+        JButton manageCourseButton = createStyledButton("课程管理", new Color(22, 160, 133));
         manageCourseButton.addActionListener(e -> manageCourses());
         toolbarPanel.add(manageCourseButton);
+        
+        JButton exportAllButton = createStyledButton("导出全部排名", new Color(22, 160, 133));
+        exportAllButton.addActionListener(e -> exportAllRanking());
+        toolbarPanel.add(exportAllButton);
 
         topPanel.add(toolbarPanel, BorderLayout.CENTER);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
 
         // 中间面板 - 表格
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(CARD_COLOR);
+        tablePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createEmptyBorder(0, 0, 0, 0)
+        ));
+
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -136,7 +190,28 @@ public class MainFrame extends JFrame {
         studentTable = new JTable(tableModel);
         studentTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         studentTable.getTableHeader().setReorderingAllowed(false);
-        studentTable.setRowHeight(25);
+        studentTable.setRowHeight(35);
+        studentTable.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        studentTable.setSelectionBackground(new Color(52, 152, 219, 100));
+        studentTable.setSelectionForeground(TEXT_COLOR);
+        studentTable.setGridColor(new Color(189, 195, 199));
+        studentTable.setShowGrid(true);
+        studentTable.setIntercellSpacing(new Dimension(1, 1));
+
+        // 设置表头样式
+        JTableHeader header = studentTable.getTableHeader();
+        header.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        header.setBackground(HEADER_COLOR);
+        header.setForeground(Color.BLACK);
+        header.setPreferredSize(new Dimension(header.getWidth(), 40));
+        header.setBorder(BorderFactory.createLineBorder(HEADER_COLOR));
+
+        // 居中对齐
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < studentTable.getColumnCount(); i++) {
+            studentTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
 
         // 双击编辑
         studentTable.addMouseListener(new MouseAdapter() {
@@ -149,13 +224,26 @@ public class MainFrame extends JFrame {
         });
 
         JScrollPane scrollPane = new JScrollPane(studentTable);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(CARD_COLOR);
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+
+        mainPanel.add(tablePanel, BorderLayout.CENTER);
 
         // 底部面板 - 状态栏
         JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(HEADER_COLOR);
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
         statusLabel = new JLabel("就绪");
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        statusLabel.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        statusLabel.setForeground(Color.WHITE);
         bottomPanel.add(statusLabel, BorderLayout.WEST);
+
+        JLabel versionLabel = new JLabel("学生信息管理系统 v2.0");
+        versionLabel.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+        versionLabel.setForeground(new Color(189, 195, 199));
+        bottomPanel.add(versionLabel, BorderLayout.EAST);
 
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -167,6 +255,46 @@ public class MainFrame extends JFrame {
 
         // 搜索框回车搜索
         searchField.addActionListener(e -> performSearch());
+    }
+
+    /**
+     * 创建样式化按钮
+     */
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("微软雅黑", Font.PLAIN, 13));
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setPreferredSize(new Dimension(button.getPreferredSize().width + 20, 35));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+
+        // 鼠标悬停效果
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(bgColor.brighter());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(bgColor);
+            }
+        });
+
+        return button;
+    }
+
+    /**
+     * 创建分隔符
+     */
+    private Component createSeparator() {
+        JSeparator separator = new JSeparator(SwingConstants.VERTICAL);
+        separator.setPreferredSize(new Dimension(2, 25));
+        separator.setForeground(new Color(189, 195, 199));
+        return separator;
     }
 
     /**
@@ -308,6 +436,31 @@ public class MainFrame extends JFrame {
         dialog.setVisible(true);
         refreshTable();
         updateStatus("已更新课程/GPA: " + student.getName());
+    }
+    
+    /**
+     * 导出全体学生按GPA排名（含所有课程列）
+     */
+    private void exportAllRanking() {
+        if (studentManager.getStudentCount() == 0) {
+            JOptionPane.showMessageDialog(this, "暂无学生数据", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("选择导出 XLSX 文件");
+        chooser.setSelectedFile(new java.io.File("全部学生排名导出.xlsx"));
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+        java.io.File file = chooser.getSelectedFile();
+        if (!file.getName().toLowerCase().endsWith(".xlsx")) {
+            file = new java.io.File(file.getParentFile(), file.getName() + ".xlsx");
+        }
+        boolean ok = service.ExcelExporter.exportAllRankingXlsx(studentManager, file);
+        if (ok) {
+            JOptionPane.showMessageDialog(this, "Excel 导出成功:\n" + file.getAbsolutePath(), "成功", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Excel 导出失败", "错误", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
