@@ -1,11 +1,11 @@
 #!/bin/bash
 # 运行脚本
 
-echo "正在启动学生信息管理系统..."
+echo "Student Information Management System is being launched..."
 
 # 检查是否已编译
 if [ ! -d "bin" ]; then
-    echo "未找到编译文件,正在编译..."
+    echo "Compilation file not found, compiling..."
     ./compile.sh
 fi
 

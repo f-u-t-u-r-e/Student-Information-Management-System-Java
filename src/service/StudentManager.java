@@ -310,10 +310,21 @@ public class StudentManager {
                 }
 
                 try {
+                    // 规范化行: 替换全角逗号、去除可能的 BOM、去除多余空格
+                    String normalized = line
+                            .replace('\uFEFF', ' ')               // 去除BOM
+                            .replace('\uFF0C', ',')               // 全角逗号
+                            .replace('，', ',')                     // 中文逗号（冗余）
+                            .trim();
+
+                    // 有些用户可能使用中文输入法输入空格或带中文逗号间隔
+                    // 再次压缩多余空白
+                    normalized = normalized.replaceAll("\s+", "");
+
                     // 格式: 学号,课程名,学分,成绩
-                    String[] parts = line.split(",");
+                    String[] parts = normalized.split(",");
                     if (parts.length != 4) {
-                        System.err.println("跳过无效行: " + line);
+                        System.err.println("跳过无效行(字段数量!=4): " + line);
                         continue;
                     }
 

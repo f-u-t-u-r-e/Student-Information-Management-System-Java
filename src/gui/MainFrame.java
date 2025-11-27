@@ -26,8 +26,15 @@ public class MainFrame extends JFrame {
     private final String[] columnNames = {"学号", "姓名", "性别", "年龄", "专业", "班级", "联系电话"};
 
     public MainFrame() {
-        // 初始化学生管理器
+        // 初始化学生管理器 - 兼容从 bin 目录运行的情况(旧脚本)
         String dataPath = "data/students.txt";
+        java.io.File primary = new java.io.File(dataPath);
+        if (!primary.exists()) {
+            java.io.File fallback = new java.io.File("../data/students.txt");
+            if (fallback.exists()) {
+                dataPath = "../data/students.txt";
+            }
+        }
         studentManager = new StudentManager(dataPath);
 
         // 设置窗口属性
@@ -109,6 +116,10 @@ public class MainFrame extends JFrame {
         JButton rankingButton = new JButton("专业排名");
         rankingButton.addActionListener(e -> showMajorRanking());
         toolbarPanel.add(rankingButton);
+
+        JButton manageCourseButton = new JButton("课程管理");
+        manageCourseButton.addActionListener(e -> manageCourses());
+        toolbarPanel.add(manageCourseButton);
 
         topPanel.add(toolbarPanel, BorderLayout.CENTER);
 
@@ -249,6 +260,10 @@ public class MainFrame extends JFrame {
         rankingItem.addActionListener(e -> showMajorRanking());
         scoreMenu.add(rankingItem);
 
+        JMenuItem manageCourseItem = new JMenuItem("课程管理(选中学生)");
+        manageCourseItem.addActionListener(e -> manageCourses());
+        scoreMenu.add(manageCourseItem);
+
         // 帮助菜单
         JMenu helpMenu = new JMenu("帮助");
 
@@ -268,6 +283,31 @@ public class MainFrame extends JFrame {
         menuBar.add(helpMenu);
 
         setJMenuBar(menuBar);
+    }
+
+    /**
+     * 管理选中学生课程
+     */
+    private void manageCourses() {
+        int selectedRow = studentTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "请先在表格中选择一个学生", "提示",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String studentId = (String) tableModel.getValueAt(selectedRow, 0);
+        Student student = studentManager.findStudentById(studentId);
+        if (student == null) {
+            JOptionPane.showMessageDialog(this,
+                    "未找到该学生: " + studentId, "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        CourseManagementDialog dialog = new CourseManagementDialog(this, studentManager, student);
+        dialog.setVisible(true);
+        refreshTable();
+        updateStatus("已更新课程/GPA: " + student.getName());
     }
 
     /**

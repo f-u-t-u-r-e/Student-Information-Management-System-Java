@@ -14,18 +14,22 @@ import java.io.File;
 public class ScoreImportDialog extends JDialog {
     private StudentManager studentManager;
     private JTextField filePathField;
+    private JLabel workDirLabel;
     private JTextArea logArea;
     private JButton selectFileButton;
     private JButton importButton;
 
     public ScoreImportDialog(Frame parent, StudentManager studentManager) {
-        super(parent, "成绩导入", true);
+        // 使用非阻塞模式，避免父窗口阻塞导致感觉“不可点击”
+        super(parent, "成绩导入", false);
         this.studentManager = studentManager;
 
         initComponents();
-
-        setSize(600, 450);
+        pack();
+        setMinimumSize(new Dimension(600, 450));
         setLocationRelativeTo(parent);
+        setResizable(true);
+        SwingUtilities.invokeLater(this::requestFocusInWindow);
     }
 
     private void initComponents() {
@@ -63,7 +67,7 @@ public class ScoreImportDialog extends JDialog {
         filePanel.add(fileLabel, BorderLayout.WEST);
 
         filePathField = new JTextField();
-        filePathField.setEditable(false);
+        filePathField.setEditable(true); // 允许手动粘贴路径作为临时绕过文件选择问题
         filePanel.add(filePathField, BorderLayout.CENTER);
 
         selectFileButton = new JButton("选择文件");
@@ -76,14 +80,19 @@ public class ScoreImportDialog extends JDialog {
         JPanel logPanel = new JPanel(new BorderLayout());
         logPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 10, 15));
 
+        JPanel northLogPanel = new JPanel(new BorderLayout());
         JLabel logLabel = new JLabel("导入日志:");
-        logPanel.add(logLabel, BorderLayout.NORTH);
+        northLogPanel.add(logLabel, BorderLayout.WEST);
+        workDirLabel = new JLabel("工作目录: " + System.getProperty("user.dir"));
+        workDirLabel.setFont(new Font("Dialog", Font.PLAIN, 11));
+        northLogPanel.add(workDirLabel, BorderLayout.EAST);
+        logPanel.add(northLogPanel, BorderLayout.NORTH);
 
         logArea = new JTextArea();
         logArea.setEditable(false);
         logArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane scrollPane = new JScrollPane(logArea);
-        scrollPane.setPreferredSize(new Dimension(500, 150));
+        scrollPane.setPreferredSize(new Dimension(500, 180));
         logPanel.add(scrollPane, BorderLayout.CENTER);
 
         add(logPanel, BorderLayout.SOUTH);
@@ -109,16 +118,30 @@ public class ScoreImportDialog extends JDialog {
      * 选择文件
      */
     private void selectFile() {
-        JFileChooser fileChooser = new JFileChooser();
+        // 使用绝对路径构建 data 目录，避免相对路径解析异常
+        File initialDir = new File(System.getProperty("user.dir"), "data");
+        if (!initialDir.exists()) {
+            File fallback = new File(System.getProperty("user.dir"), "../data");
+            if (fallback.exists()) {
+                initialDir = fallback;
+            }
+        }
+
+        // 确保在事件派发线程中执行文件选择器
+        JFileChooser fileChooser = new JFileChooser(initialDir.getAbsolutePath());
+        fileChooser.setAcceptAllFileFilterUsed(true);
         fileChooser.setFileFilter(new FileNameExtensionFilter(
-                "CSV文件 (*.csv, *.txt)", "csv", "txt"));
+                "CSV或文本文件 (*.csv, *.txt)", "csv", "txt"));
 
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             filePathField.setText(file.getAbsolutePath());
             importButton.setEnabled(true);
-            logArea.setText("已选择文件: " + file.getName() + "\n");
+            logArea.append("已选择文件: " + file.getAbsolutePath() + "\n");
+            logArea.append("文件存在: " + file.exists() + "\n");
+        } else {
+            logArea.append("文件选择已取消或失败\n");
         }
     }
 
@@ -126,12 +149,29 @@ public class ScoreImportDialog extends JDialog {
      * 导入成绩
      */
     private void importScores() {
-        String filePath = filePathField.getText();
+        String filePath = filePathField.getText().trim();
         if (filePath.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "请先选择成绩文件!", "提示",
                     JOptionPane.WARNING_MESSAGE);
             return;
+        }
+
+        File f = new File(filePath);
+        if (!f.exists()) {
+            JOptionPane.showMessageDialog(this,
+                    "文件不存在: " + filePath, "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!filePath.toLowerCase().endsWith(".csv") && !filePath.toLowerCase().endsWith(".txt")) {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "文件扩展名不是 .csv 或 .txt, 继续导入?", "确认",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
+            }
         }
 
         logArea.append("开始导入成绩数据...\n");

@@ -82,7 +82,7 @@ public class FileManager {
             // 写入注释说明
             writer.write("# 学生信息管理系统数据文件");
             writer.newLine();
-            writer.write("# 格式: 学号,姓名,性别,年龄,专业,班级,联系电话,语文成绩,数学成绩,英语成绩");
+            writer.write("# 新格式: 学号,姓名,性别,年龄,专业,班级,联系电话,[课程1:学分:成绩|课程2:学分:成绩|...]");
             writer.newLine();
 
             // 写入学生数据
