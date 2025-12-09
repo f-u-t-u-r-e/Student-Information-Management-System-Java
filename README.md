@@ -1,5 +1,5 @@
 
-# 学生信息管理系统 (Student Information Management System)
+# 学生信息管理系统 (Java)
 
 ![Java](https://img.shields.io/badge/Java-8%2B-blue)
 ![GUI](https://img.shields.io/badge/Swing-UI-yellow)
