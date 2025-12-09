@@ -621,32 +621,8 @@ public class MainFrame extends JFrame {
      * 显示统计信息
      */
     private void showStatistics() {
-        Map<String, Object> stats = studentManager.getStatistics();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("学生信息统计\n");
-        sb.append("===================\n\n");
-        sb.append("总人数: ").append(stats.get("总人数")).append("\n");
-        sb.append("男生人数: ").append(stats.get("男生人数")).append("\n");
-        sb.append("女生人数: ").append(stats.get("女生人数")).append("\n");
-        sb.append("平均年龄: ").append(stats.get("平均年龄")).append("\n\n");
-
-        sb.append("专业分布:\n");
-        @SuppressWarnings("unchecked")
-        Map<String, Long> majorDist = (Map<String, Long>) stats.get("专业分布");
-        if (majorDist != null) {
-            majorDist.forEach((major, count) ->
-                    sb.append("  ").append(major).append(": ").append(count).append("人\n"));
-        }
-
-        JTextArea textArea = new JTextArea(sb.toString());
-        textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-
-        JOptionPane.showMessageDialog(this,
-                new JScrollPane(textArea),
-                "统计信息",
-                JOptionPane.INFORMATION_MESSAGE);
+        StatisticsDialog dialog = new StatisticsDialog(this, studentManager);
+        dialog.setVisible(true);
     }
 
     /**
