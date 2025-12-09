@@ -147,7 +147,16 @@ public class ScoreImportDialog extends JDialog {
 
         logArea = new JTextArea();
         logArea.setEditable(false);
-        logArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+        // 使用支持中文的字体，避免中文字符显示为方块或乱码
+        // 优先使用系统常见中文字体，若不可用则回退到默认字体
+        Font cjkFont = new Font("微软雅黑", Font.PLAIN, 12);
+        if (!cjkFont.canDisplay('中')) {
+            cjkFont = new Font("Microsoft YaHei UI", Font.PLAIN, 12);
+        }
+        if (!cjkFont.canDisplay('文')) {
+            cjkFont = new Font("SimSun", Font.PLAIN, 12);
+        }
+        logArea.setFont(cjkFont);
         logArea.setForeground(TEXT_COLOR);
         logArea.setBackground(new Color(250, 250, 250));
         JScrollPane scrollPane = new JScrollPane(logArea);
