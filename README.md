@@ -3,9 +3,9 @@
 
 ![Java](https://img.shields.io/badge/Java-8%2B-blue)
 ![GUI](https://img.shields.io/badge/Swing-UI-yellow)
-![Version](https://img.shields.io/badge/Version-2.1-brightgreen)
+![Version](https://img.shields.io/badge/Version-2.3-brightgreen)
 ![Status](https://img.shields.io/badge/Build-Manual-lightgrey)
-![License](https://img.shields.io/badge/License-Education_NonCommercial-orange)
+![License](https://img.shields.io/badge/License-MIT-orange)
 
 ## 项目简介
 
@@ -25,13 +25,10 @@
 - 备份功能（生成 `.backup` 文件）
 - 自定义排序（学号 / 姓名 / 年龄 / GPA）
 
-## 新增亮点（v2.1）
+## 新增亮点（v2.3）
 
-- 课程管理对话框：单独维护某位学生的全部课程条目
-- 支持课程增删改清空，实时刷新 GPA 与总学分
-- 成绩导入兼容“中文输入法”全角逗号格式
-- 改进运行脚本：保持根目录避免相对路径失效
-- 更健壮的数据加载与路径回退逻辑
+- 日志区域字体优化：`ScoreImportDialog` 使用中文友好字体（微软雅黑/Microsoft YaHei UI/宋体）避免中文乱码
+- 文档更新：运行环境说明更新
 
 ## 技术栈
 
@@ -47,6 +44,7 @@
 - 操作系统：Windows / Linux / macOS（示例脚本以 Windows 为主）
 - JDK：8 及以上版本
 - 编码：UTF-8
+- 字体建议：Windows 环境默认包含中文字体（微软雅黑/宋体）。Swing 文本区域已按中文友好字体优先级设置，减少中文显示乱码。
 
 ## 项目结构
 
@@ -204,9 +202,14 @@ GPA = Σ(课程成绩 × 课程学分) / Σ(全部课程学分)
 
 ## 更新日志
 
+### v2.3 (2025-12)
+- 修复中文显示问题：日志区域采用中文友好字体，减少中文字符显示为方块或乱码的情况
+- 环境说明更新
+
 ### v2.2 (2025-11)
 - 新增原生 Excel (`.xlsx`) 排名导出（专业/全部学生）
 - 删除旧 CSV 排名导出实现（简化代码）
+ - UI 字体兼容性说明补充，避免中文乱码
 
 ### v2.1 (2025-11)
 - 新增 `CourseManagementDialog` 单学生课程管理
@@ -238,13 +241,11 @@ GPA = Σ(课程成绩 × 课程学分) / Σ(全部课程学分)
 - 增加自动化测试
 
 ## 免责声明 / 许可
+本项目遵循 MIT 许可证。详见仓库根目录中的 `LICENSE` 文件。
 
-- 仅用于教学与学习交流，禁止商业使用
-- 数据文件由使用者自行维护
-- 修改与分发请注明来源
-- 本系统不保证用于真实生产场景的稳定性
+数据文件由使用者自行维护；本系统不保证用于真实生产场景的稳定性。
 
-## 联系方式
+联系方式
 
 - Issues: 反馈问题与建议
 - Discussions: 功能讨论与扩展
@@ -252,8 +253,8 @@ GPA = Σ(课程成绩 × 课程学分) / Σ(全部课程学分)
 ---
 
 如果需要英文版或进一步的功能文档，请提出需求。
-- **开发时间**: 2025.11
+- **开发时间**: 2025.12
 
 ## 许可
 
-本项目仅用于学习交流,禁止商业使用。
+本项目采用 MIT 许可证，允许用于商业与非商业用途，需保留版权与许可声明。
