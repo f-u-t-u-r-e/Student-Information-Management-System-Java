@@ -3,7 +3,7 @@
 
 ![Java](https://img.shields.io/badge/Java-8%2B-blue)
 ![GUI](https://img.shields.io/badge/Swing-UI-yellow)
-![Version](https://img.shields.io/badge/Version-2.3-brightgreen)
+![Version](https://img.shields.io/badge/Version-2.4-brightgreen)
 ![Status](https://img.shields.io/badge/Build-Manual-lightgrey)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 
