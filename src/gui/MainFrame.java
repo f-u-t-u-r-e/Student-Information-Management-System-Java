@@ -175,12 +175,12 @@ public class MainFrame extends JFrame {
         toolbarPanel.add(exportAllButton);
 
         // 权限控制：学生禁用修改类操作
-        boolean isTeacher = currentUser.getRole() == User.Role.TEACHER;
-        addButton.setEnabled(isTeacher);
-        editButton.setEnabled(isTeacher);
-        deleteButton.setEnabled(isTeacher);
-        importScoreButton.setEnabled(isTeacher);
-        manageCourseButton.setEnabled(isTeacher);
+        boolean isPrivileged = currentUser.getRole() == User.Role.TEACHER || currentUser.getRole() == User.Role.ADMIN;
+        addButton.setEnabled(isPrivileged);
+        editButton.setEnabled(isPrivileged);
+        deleteButton.setEnabled(isPrivileged);
+        importScoreButton.setEnabled(isPrivileged);
+        manageCourseButton.setEnabled(isPrivileged);
 
         topPanel.add(toolbarPanel, BorderLayout.CENTER);
 
@@ -759,3 +759,4 @@ public class MainFrame extends JFrame {
         statusLabel.setText(message);
     }
 }
+
