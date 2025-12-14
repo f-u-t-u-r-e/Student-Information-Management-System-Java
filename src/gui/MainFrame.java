@@ -181,7 +181,7 @@ public class MainFrame extends JFrame {
         deleteButton.setEnabled(isPrivileged);
         importScoreButton.setEnabled(isPrivileged);
         manageCourseButton.setEnabled(isPrivileged);
-
+        backupButton.setEnabled(isPrivileged);
         topPanel.add(toolbarPanel, BorderLayout.CENTER);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
@@ -759,4 +759,5 @@ public class MainFrame extends JFrame {
         statusLabel.setText(message);
     }
 }
+
 
